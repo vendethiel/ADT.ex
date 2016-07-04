@@ -6,6 +6,10 @@ defmodule AdtTest do
     ADT.define foo(a: 0) | bar(val: "hey")
   end
 
+  defmodule AdtWithVariantWithoutFields do
+    ADT.define foo(a: 0) | bar
+  end
+
   test "creating an ADT instance" do
     foo = %AdtDefinition.Foo{a: 1}
     assert foo.a == 1
@@ -28,6 +32,11 @@ defmodule AdtTest do
 
     bar = %AdtDefinition.Bar{}
     assert bar.val == "hey"
+  end
+
+  test "creating an ADT instance for variants without fields" do
+    assert %AdtWithVariantWithoutFields.Bar{}
+    assert %AdtWithVariantWithoutFields.Foo{a: 1}.a == 1
   end
 
   test "an empty ADT is forbidden" do
