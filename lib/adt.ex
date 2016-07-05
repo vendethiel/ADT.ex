@@ -20,16 +20,10 @@ defmodule ADT do
     format_parts(elem, caller) ++ format_parts(rest, caller)
   end
   defp format_parts({name, _, [content]}, caller) do
-    # name is lowercase atom, need to capitalize + re-atom
-    # fields is [name: val, name: val]
-    module_name = name |> to_string |> format_module_name
-    # then, generate a module name from the string
-    module_name = Module.concat([caller.module, module_name])
-
-    [{module_name, content}]
+    [{create_full_name(name, caller), content}]
   end
-  defp format_parts({name, _, []}, _) do
-    raise "Unable to generate ADT variant #{name}: no fields declared"
+  defp format_parts({name, _, _}, caller) do
+    [{create_full_name(name, caller), []}]
   end
 
   # Generates an AST for the module definition
@@ -42,6 +36,14 @@ defmodule ADT do
         defstruct unquote(fields)
       end
     end
+  end
+
+  defp create_full_name(name, caller) do
+    # name is lowercase atom, need to capitalize + re-atom
+    # fields is [name: val, name: val]
+    module_name = name |> to_string |> format_module_name
+    # then, generate a module name from the string
+    Module.concat([caller.module, module_name])
   end
 
   # Helper code that really shouldn't be here.
