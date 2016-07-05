@@ -11,7 +11,20 @@ defmodule ADT do
     %Foo{a: "value"}
   """
   defmacro define(parts) do
-    parts |> format_parts(__CALLER__) |> Enum.map(&generate_defmodule/1)
+    parts |> format_parts(__CALLER__) |> generate_code
+  end
+
+  defp generate_code(values) do
+    variants_definition = quote do
+      Module.register_attribute __MODULE__, :variants, accumulate: true
+    end
+    variants_reader = quote do
+      def variants do
+        @variants
+      end
+    end
+    modules = values |> Enum.map(&generate_defmodule/1)
+    Enum.concat([[variants_definition], modules, [variants_reader]])
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST
@@ -32,6 +45,7 @@ defmodule ADT do
   #  foo(a: "default")
   defp generate_defmodule({name, fields}) do
     quote do
+      @variants unquote(name)
       defmodule unquote(name) do
         defstruct unquote(fields)
       end

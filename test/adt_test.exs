@@ -6,6 +6,10 @@ defmodule AdtTest do
     ADT.define foo(a: 0) | bar(val: "hey")
   end
 
+  defmodule AdtDefinitionThree do
+    ADT.define foo(a: 0) | bar(val: "hey") | baz
+  end
+
   defmodule AdtWithVariantWithoutFields do
     ADT.define foo(a: 0) | bar
   end
@@ -43,5 +47,10 @@ defmodule AdtTest do
     catch_error(Code.compile_quoted do
       ADT.define
     end)
+  end
+
+  test "getting variants from the Module" do
+    assert AdtDefinition.variants == [AdtTest.AdtDefinition.Bar, AdtTest.AdtDefinition.Foo]
+    assert AdtDefinitionThree.variants == [AdtTest.AdtDefinitionThree.Baz, AdtTest.AdtDefinitionThree.Bar, AdtTest.AdtDefinitionThree.Foo]
   end
 end
