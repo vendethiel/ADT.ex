@@ -61,4 +61,12 @@ defmodule AdtTest do
       _ -> false
     end)
   end
+
+  test "adtcase allows per-module pattern matching" do
+    foo = %AdtDefinition.Foo{}
+    assert 0 == (ADT.case AdtDefinition, foo do
+      %AdtDefinition.Foo{a: a} -> a
+      _ -> false
+    end)
+  end
 end

@@ -14,6 +14,32 @@ defmodule ADT do
     parts |> format_parts(__CALLER__) |> generate_code
   end
 
+  defmacro case(adt, name, [do: cases]) do
+    #Code.ensure_loaded?(adt) # XXX something like this
+    mentioned = Enum.reduce(cases, [], fn (caze, mentioned_acc) ->
+      # note: head must have size=1. we only support "a -> x", not "a, b -> x"
+      {:->, _, [[match], _body]} = caze
+      # extract the name in "%Foo{}"
+      if elem(match, 0) == :_ do
+        IO.puts "catch all"
+        [:_ | mentioned_acc] # this should act as a catch-all
+      else
+        # aliased_name will look like {:__aliases__, [...], [:NS, :NS2, :Module]}
+        {:%, _, [aliased_name | _]} = match
+        # not sure there's a more common mechanism to extract the name..?
+        {:__aliases__, _, name_parts} = aliased_name # parts is an array i.e. [:ADT, :Variant]
+        IO.puts "add named"
+        IO.inspect name_parts
+        [name_parts | mentioned_acc]
+        end
+    end)
+    IO.puts "yo"
+    IO.inspect mentioned
+    quote do
+      case unquote(name), do: unquote(cases)
+    end
+  end
+
   defp generate_code(values) do
     variants_definition = quote do
       Module.register_attribute __MODULE__, :variants, accumulate: true
