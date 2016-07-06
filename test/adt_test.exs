@@ -39,7 +39,7 @@ defmodule AdtTest do
   end
 
   test "creating an ADT instance for variants without fields" do
-    assert %AdtWithVariantWithoutFields.Bar{}
+    assert Code.ensure_loaded?(AdtWithVariantWithoutFields.Bar)
     assert %AdtWithVariantWithoutFields.Foo{a: 1}.a == 1
   end
 
