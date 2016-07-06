@@ -68,6 +68,18 @@ defmodule AdtTest do
     assert result == "foo"
   end
 
+  test "non-exhaustive case" do
+    catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{} do
+        [
+          {"Foo", fn(x) -> "foo" end}
+        ]
+      end
+    """
+  end
+
   test "you can pattern match an ADT" do
     foo = %AdtDefinition.Foo{}
     assert 0 == (case foo do
