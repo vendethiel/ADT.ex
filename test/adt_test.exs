@@ -54,6 +54,20 @@ defmodule AdtTest do
     assert AdtDefinitionThree.variants == [AdtTest.AdtDefinitionThree.Baz, AdtTest.AdtDefinitionThree.Bar, AdtTest.AdtDefinitionThree.Foo]
   end
 
+  test "case" do
+    require AdtTest.AdtDefinition
+
+    foo = %AdtDefinition.Foo{}
+
+    result = AdtDefinition.case foo do
+      [
+        {"Foo", fn(x) -> "foo" end},
+        {"Bar", fn(x) -> "bar" end}
+      ]
+    end
+    assert result == "foo"
+  end
+
   test "you can pattern match an ADT" do
     foo = %AdtDefinition.Foo{}
     assert 0 == (case foo do

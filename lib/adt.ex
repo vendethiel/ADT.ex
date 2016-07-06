@@ -24,7 +24,36 @@ defmodule ADT do
       end
     end
     modules = values |> Enum.map(&generate_defmodule/1)
-    Enum.concat([[variants_definition], modules, [variants_reader]])
+    Enum.concat([[variants_definition], modules, [variants_reader, case_macro(values)]])
+  end
+
+  defp case_macro(values) do
+    quote do
+      defmacro case(a, [do: statements]) do
+        possible_variants = Enum.map(
+          unquote(values),
+          fn {variant, _} ->
+            # Maps a module like Foo.Bar.Baz into a short string "Baz"
+            Regex.named_captures(~r/\.(?<short>[^\.]+)$/, inspect(variant), include_captures: true) |> Map.fetch!("short")
+          end
+        ) |> Enum.sort
+        given_variants = statements |> Enum.map(fn {k, _} -> k end) |> Enum.sort
+        if possible_variants != given_variants do
+          raise "Not exhaustive!"
+        end
+        rules = Enum.flat_map(statements, fn {k, v} ->
+          condition = quote do
+            Regex.named_captures(~r/\.(?<short>[^\.]+){/, inspect(unquote(a)), include_captures: true) |> Map.fetch!("short")
+          end
+          quote do
+            unquote(condition) -> unquote(v).(unquote(a))
+          end
+        end)
+        quote do
+          cond do: unquote(rules)
+        end
+      end
+    end
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST
