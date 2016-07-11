@@ -38,7 +38,7 @@ defmodule ADT do
         given_variants = statements |> Enum.map(fn {k, v} -> { to_string(k), v } end) |> Enum.sort
         given_variant_names = given_variants |> Enum.map(fn {k, _} -> k end)
         if possible_variants != given_variant_names do
-          raise "Not exhaustive!"
+          raise ADT._exhaustive_error(possible_variants, given_variant_names)
         end
         rules = Enum.flat_map(given_variants, fn {k, v} ->
           condition = quote do
@@ -62,6 +62,10 @@ defmodule ADT do
 
   def _shorten_match(match) do
     Regex.named_captures(~r/\.(?<short>[^\.]+){/, inspect(match), include_captures: true) |> Map.fetch!("short")
+  end
+
+  def _exhaustive_error(possible_variants, given_variants) do
+    "case macro not exhaustive.\nGiven #{inspect(given_variants)}.\nPossible: #{inspect(possible_variants)}."
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST
