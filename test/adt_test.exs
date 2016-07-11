@@ -67,13 +67,14 @@ defmodule AdtTest do
   end
 
   test "non-exhaustive case" do
-    catch_error Code.eval_string """
+    error = catch_error Code.eval_string """
       require AdtTest.AdtDefinition
 
       result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
         Foo: fn(x) -> "foo" end
       ]
     """
+    assert error.message == "case macro not exhaustive.\nGiven [\"Foo\"].\nPossible: [\"Bar\", \"Foo\"]."
   end
 
   test "you can pattern match an ADT" do
