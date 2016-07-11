@@ -59,24 +59,20 @@ defmodule AdtTest do
 
     foo = %AdtDefinition.Foo{}
 
-    result = AdtDefinition.case foo do
-      [
-        {"Foo", fn(x) -> "foo" end},
-        {"Bar", fn(x) -> "bar" end}
-      ]
-    end
-    assert result == "foo"
+    result = AdtDefinition.case foo, [
+      Foo: fn(x) -> "1" end,
+      Bar: fn(x) -> "2" end
+    ]
+    assert result == "1"
   end
 
   test "non-exhaustive case" do
     catch_error Code.eval_string """
       require AdtTest.AdtDefinition
 
-      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{} do
-        [
-          {"Foo", fn(x) -> "foo" end}
-        ]
-      end
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
+        Foo: fn(x) -> "foo" end
+      ]
     """
   end
 

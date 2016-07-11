@@ -29,21 +29,20 @@ defmodule ADT do
 
   defp case_macro(values) do
     quote do
-      defmacro case(a, [do: statements]) do
-        possible_variants = Enum.map(
-          unquote(values),
+      defmacro case(a, statements) do
+        possible_variants = unquote(values) |> Enum.map(
           fn {variant, _} ->
-            # Maps a module like Foo.Bar.Baz into a short string "Baz"
-            Regex.named_captures(~r/\.(?<short>[^\.]+)$/, inspect(variant), include_captures: true) |> Map.fetch!("short")
+            ADT._shorten_module_name(variant)
           end
         ) |> Enum.sort
-        given_variants = statements |> Enum.map(fn {k, _} -> k end) |> Enum.sort
-        if possible_variants != given_variants do
+        given_variants = statements |> Enum.map(fn {k, v} -> { to_string(k), v } end) |> Enum.sort
+        given_variant_names = given_variants |> Enum.map(fn {k, _} -> k end)
+        if possible_variants != given_variant_names do
           raise "Not exhaustive!"
         end
-        rules = Enum.flat_map(statements, fn {k, v} ->
+        rules = Enum.flat_map(given_variants, fn {k, v} ->
           condition = quote do
-            Regex.named_captures(~r/\.(?<short>[^\.]+){/, inspect(unquote(a)), include_captures: true) |> Map.fetch!("short")
+            unquote(k) == ADT._shorten_match(unquote(a))
           end
           quote do
             unquote(condition) -> unquote(v).(unquote(a))
@@ -54,6 +53,15 @@ defmodule ADT do
         end
       end
     end
+  end
+
+  # Maps a module like Foo.Bar.Baz into a short string "Baz"
+  def _shorten_module_name(variant) do
+    Regex.named_captures(~r/\.(?<short>[^\.]+)$/, inspect(variant), include_captures: true) |> Map.fetch!("short")
+  end
+
+  def _shorten_match(match) do
+    Regex.named_captures(~r/\.(?<short>[^\.]+){/, inspect(match), include_captures: true) |> Map.fetch!("short")
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST
