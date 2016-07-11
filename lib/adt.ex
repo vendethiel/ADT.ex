@@ -41,11 +41,8 @@ defmodule ADT do
           raise ADT._exhaustive_error(possible_variants, given_variant_names)
         end
         rules = Enum.flat_map(given_variants, fn {k, v} ->
-          condition = quote do
-            unquote(k) == ADT._shorten(unquote(a))
-          end
           quote do
-            unquote(condition) -> unquote(v).(unquote(a))
+            unquote(k) == ADT._shorten(unquote(a)) -> unquote(v).(unquote(a))
           end
         end)
         quote do
@@ -57,7 +54,7 @@ defmodule ADT do
 
   # Maps a module like Foo.Bar.Baz into a short string "Baz"
   def _shorten(name) do
-    Regex.named_captures(~r/\.(?<short>[^\.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
+    Regex.named_captures(~r/.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
   end
 
   def _exhaustive_error(possible_variants, given_variants) do
