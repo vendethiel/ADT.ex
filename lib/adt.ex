@@ -32,7 +32,7 @@ defmodule ADT do
       defmacro case(a, statements) do
         possible_variants = unquote(values) |> Enum.map(
           fn {variant, _} ->
-            ADT._shorten_module_name(variant)
+            ADT._shorten(variant)
           end
         ) |> Enum.sort
         given_variants = statements |> Enum.map(fn {k, v} -> { to_string(k), v } end) |> Enum.sort
@@ -42,7 +42,7 @@ defmodule ADT do
         end
         rules = Enum.flat_map(given_variants, fn {k, v} ->
           condition = quote do
-            unquote(k) == ADT._shorten_match(unquote(a))
+            unquote(k) == ADT._shorten(unquote(a))
           end
           quote do
             unquote(condition) -> unquote(v).(unquote(a))
@@ -56,12 +56,8 @@ defmodule ADT do
   end
 
   # Maps a module like Foo.Bar.Baz into a short string "Baz"
-  def _shorten_module_name(variant) do
-    Regex.named_captures(~r/\.(?<short>[^\.]+)$/, inspect(variant), include_captures: true) |> Map.fetch!("short")
-  end
-
-  def _shorten_match(match) do
-    Regex.named_captures(~r/\.(?<short>[^\.]+){/, inspect(match), include_captures: true) |> Map.fetch!("short")
+  def _shorten(name) do
+    Regex.named_captures(~r/\.(?<short>[^\.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
   end
 
   def _exhaustive_error(possible_variants, given_variants) do

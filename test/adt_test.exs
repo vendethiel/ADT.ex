@@ -60,8 +60,8 @@ defmodule AdtTest do
     foo = %AdtDefinition.Foo{}
 
     result = AdtDefinition.case foo, [
-      Foo: fn(x) -> "1" end,
-      Bar: fn(x) -> "2" end
+      Foo: fn(_) -> "1" end,
+      Bar: fn(_) -> "2" end
     ]
     assert result == "1"
   end
