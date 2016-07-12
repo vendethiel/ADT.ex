@@ -54,7 +54,7 @@ defmodule ADT do
 
   # Maps a module like Foo.Bar.Baz into a short string "Baz"
   def _shorten(name) do
-    Regex.named_captures(~r/.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
+    Regex.named_captures(~r/\.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
   end
 
   def _exhaustive_error(possible_variants, given_variants) do
