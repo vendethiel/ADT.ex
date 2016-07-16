@@ -24,7 +24,41 @@ defmodule ADT do
       end
     end
     modules = values |> Enum.map(&generate_defmodule/1)
-    Enum.concat([[variants_definition], modules, [variants_reader]])
+    Enum.concat([[variants_definition], modules, [variants_reader, case_macro(values)]])
+  end
+
+  defp case_macro(values) do
+    quote do
+      defmacro case(a, statements) do
+        possible_variants = unquote(values) |> Enum.map(
+          fn {variant, _} ->
+            ADT._shorten(variant)
+          end
+        ) |> Enum.sort
+        given_variants = statements |> Enum.map(fn {k, v} -> { to_string(k), v } end) |> Enum.sort
+        given_variant_names = given_variants |> Enum.map(fn {k, _} -> k end)
+        if possible_variants != given_variant_names do
+          raise ADT._exhaustive_error(possible_variants, given_variant_names)
+        end
+        rules = Enum.flat_map(given_variants, fn {k, v} ->
+          quote do
+            unquote(k) == ADT._shorten(unquote(a)) -> unquote(v).(unquote(a))
+          end
+        end)
+        quote do
+          cond do: unquote(rules)
+        end
+      end
+    end
+  end
+
+  # Maps a module like Foo.Bar.Baz into a short string "Baz"
+  def _shorten(name) do
+    Regex.named_captures(~r/\.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
+  end
+
+  def _exhaustive_error(possible_variants, given_variants) do
+    "case macro not exhaustive.\nGiven #{inspect(given_variants)}.\nPossible: #{inspect(possible_variants)}."
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST

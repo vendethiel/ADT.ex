@@ -54,6 +54,42 @@ defmodule AdtTest do
     assert AdtDefinitionThree.variants == [AdtTest.AdtDefinitionThree.Baz, AdtTest.AdtDefinitionThree.Bar, AdtTest.AdtDefinitionThree.Foo]
   end
 
+  test "case" do
+    require AdtTest.AdtDefinition
+
+    foo = %AdtDefinition.Foo{}
+
+    result = AdtDefinition.case foo, [
+      Foo: fn(_) -> "1" end,
+      Bar: fn(_) -> "2" end
+    ]
+    assert result == "1"
+  end
+
+  test "non-exhaustive case" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
+        Foo: fn(x) -> "foo" end
+      ]
+    """
+    assert error.message == "case macro not exhaustive.\nGiven [\"Foo\"].\nPossible: [\"Bar\", \"Foo\"]."
+  end
+
+  test "dead code in case statement" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
+        Foo: fn(x) -> "1" end,
+        Bar: fn(x) -> "2" end,
+        Baz: fn(x) -> "3" end
+      ]
+    """
+    assert error.message == "case macro not exhaustive.\nGiven [\"Bar\", \"Baz\", \"Foo\"].\nPossible: [\"Bar\", \"Foo\"]."
+  end
+
   test "you can pattern match an ADT" do
     foo = %AdtDefinition.Foo{}
     assert 0 == (case foo do
