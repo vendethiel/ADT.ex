@@ -53,3 +53,13 @@ result = MyModule.case value, [
 # This fails at build time with:
 # case macro not exhaustive.\nGiven [\"Foo\"].\nPossible: [\"Bar\", \"Foo\"].
 ```
+
+### Inspecting the possible constructors
+
+You can use the `variants` function to get the list of possible constructors for an ADT:
+
+```elixir
+MyModule.variants
+
+# => [MyModule.Bar, MyModule.Foo]
+```
