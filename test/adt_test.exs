@@ -64,6 +64,14 @@ defmodule AdtTest do
       Bar: fn(_) -> "2" end
     ]
     assert result == "1"
+
+    bar = %AdtDefinition.Bar{}
+
+    result = AdtDefinition.case bar, [
+      Foo: fn(_) -> "1" end,
+      Bar: fn(x) -> x.val <> " there" end
+    ]
+    assert result == "hey there"
   end
 
   test "non-exhaustive case" do
@@ -88,6 +96,24 @@ defmodule AdtTest do
       ]
     """
     assert error.message == "case macro not exhaustive.\nGiven [\"Bar\", \"Baz\", \"Foo\"].\nPossible: [\"Bar\", \"Foo\"]."
+  end
+
+  test "case statement with no options" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, []
+    """
+    assert error.message == "case macro not exhaustive.\nGiven [].\nPossible: [\"Bar\", \"Foo\"]."
+  end
+
+  test "case statement with missing second param" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}
+    """
+    assert error.message == "case macro not exhaustive.\nGiven [].\nPossible: [\"Bar\", \"Foo\"]."
   end
 
   test "you can pattern match an ADT" do

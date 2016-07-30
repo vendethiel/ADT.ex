@@ -29,7 +29,7 @@ defmodule ADT do
 
   defp case_macro(values) do
     quote do
-      defmacro case(a, statements) do
+      defmacro case(a, statements \\ []) do
         possible_variants = unquote(values) |> Enum.map(
           fn {variant, _} ->
             ADT._shorten(variant)
