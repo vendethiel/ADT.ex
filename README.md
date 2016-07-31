@@ -8,7 +8,7 @@ Add adt to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:adt, "~> 0.0.1"}]
+  [{:adt, "~> 1.0.0"}]
 end
 ```
 
