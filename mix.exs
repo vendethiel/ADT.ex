@@ -3,7 +3,7 @@ defmodule Adt.Mixfile do
 
   def project do
     [app: :adt,
-     version: "0.0.2",
+     version: "1.0.0",
      elixir: "~> 1.2",
      description: description,
      package: package,

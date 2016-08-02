@@ -4,13 +4,13 @@ A small/light ADT module for Elixir.
 
 ## Installation
 
-The package can be installed as:
+Add adt to your list of dependencies in `mix.exs`:
 
-  1. Add adt to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:adt, "~> 0.0.1"}]
-        end
+```elixir
+def deps do
+  [{:adt, "~> 1.0.0"}]
+end
+```
 
 ## Usage
 
