@@ -57,8 +57,20 @@ defmodule ADT do
     Regex.named_captures(~r/\.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
   end
 
+  def _exhaustive_error(possible_variants, []) do
+    "case macro needs to handle these cases: #{inspect(possible_variants)}."
+  end
   def _exhaustive_error(possible_variants, given_variants) do
-    "case macro not exhaustive.\nGiven #{inspect(given_variants)}.\nPossible: #{inspect(possible_variants)}."
+    set_possible = MapSet.new(possible_variants)
+    set_given = MapSet.new(given_variants)
+    unhandled_cases = Enum.into(MapSet.difference(set_possible, set_given), [])
+    if MapSet.subset?(set_given, set_possible) do
+      "case macro not exhaustive.\nUnhandled cases: #{inspect(unhandled_cases)}."
+    else
+      extra_cases = Enum.into(MapSet.difference(set_given, set_possible), [])
+      unhandled_message = if unhandled_cases == [], do: "", else: "\nUnhandled cases: #{inspect(unhandled_cases)}."
+      "case macro not exhaustive.#{unhandled_message}\nExtra cases: #{inspect(extra_cases)}."
+    end
   end
 
   # Flatten "one | two | three" ("one | (two | three)" in the AST
