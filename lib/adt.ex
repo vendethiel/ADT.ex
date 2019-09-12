@@ -37,14 +37,11 @@ defmodule ADT do
         ) |> Enum.sort
         given_variants = statements |> Enum.map(fn {k, v} -> { to_string(k), v } end) |> Enum.sort
         given_variant_names = given_variants |> Enum.map(fn {k, _} -> k end)
-        if possible_variants != given_variant_names do
+        catch_all = statements |> Enum.map(fn {k, _} -> to_string(k) end) |> ADT._has_catch_all
+        if possible_variants != given_variant_names and not catch_all do
           raise ADT._exhaustive_error(possible_variants, given_variant_names)
         end
-        rules = Enum.flat_map(given_variants, fn {k, v} ->
-          quote do
-            unquote(k) == ADT._shorten(unquote(a)) -> unquote(v).(unquote(a))
-          end
-        end)
+        rules = Enum.flat_map(given_variants, &ADT._compile_clause(a, &1))
         quote do
           cond do: unquote(rules)
         end
@@ -55,6 +52,17 @@ defmodule ADT do
   # Maps a module like Foo.Bar.Baz into a short string "Baz"
   def _shorten(name) do
     Regex.named_captures(~r/\.(?<short>[^.{]+)($|{)/, inspect(name), include_captures: true) |> Map.fetch!("short")
+  end
+
+  def _compile_clause(a, {"_", v}) do
+    quote do
+      true -> unquote(v).(unquote(a))
+    end
+  end
+  def _compile_clause(a, {k, v}) do
+    quote do
+      unquote(k) == ADT._shorten(unquote(a)) -> unquote(v).(unquote(a))
+    end
   end
 
   def _exhaustive_error(possible_variants, []) do
@@ -70,6 +78,22 @@ defmodule ADT do
       extra_cases = Enum.into(MapSet.difference(set_given, set_possible), [])
       unhandled_message = if unhandled_cases == [], do: "", else: "\nUnhandled cases: #{inspect(unhandled_cases)}."
       "case macro not exhaustive.#{unhandled_message}\nExtra cases: #{inspect(extra_cases)}."
+    end
+  end
+
+  def _has_catch_all(names) do
+    count = Enum.count(names, fn n -> n == "_" end)
+    case {count, Enum.reverse(names)} do
+      {_, []} ->
+        false
+      {0, _} ->
+        false
+      {1, ["_"|a]} ->
+        true
+      {1, _} ->
+        raise "case macro only accepts a catch all at the last position."
+      {count, _} when count > 1 ->
+        raise "case macro contains #{count} catch all clauses."
     end
   end
 

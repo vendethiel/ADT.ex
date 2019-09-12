@@ -135,4 +135,39 @@ defmodule AdtTest do
       _ -> false
     end)
   end
+
+  test "you can have a catch all that comes last" do
+    require AdtTest.AdtDefinition
+
+    foo = %AdtDefinition.Foo{}
+    assert true == AdtTest.AdtDefinition.case(foo, [
+      Bar: fn(_) -> false end,
+      _: fn(_) -> true end
+    ])
+  end
+
+  test "A catch all has to come last" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
+        _: fn(x) -> true end,
+        Bar: fn(x) -> false end
+      ]
+    """
+    assert error.message == "case macro only accepts a catch all at the last position."
+  end
+
+  test "you can only have one catch all" do
+    error = catch_error Code.eval_string """
+      require AdtTest.AdtDefinition
+
+      result = AdtTest.AdtDefinition.case %AdtTest.AdtDefinition.Foo{}, [
+        _: fn(x) -> "1" end,
+        _: fn(x) -> "2" end,
+        _: fn(x) -> "3" end
+      ]
+    """
+    assert error.message == "case macro contains 3 catch all clauses."
+  end
 end
